@@ -35,3 +35,9 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### project ###
+/src/main/resources/application-dev.yml
+log/
+src/main/resources/static/
+src/main/resources/templates/
