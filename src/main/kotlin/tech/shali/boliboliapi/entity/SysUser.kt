@@ -1,5 +1,6 @@
 package tech.shali.boliboliapi.entity
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
@@ -11,7 +12,7 @@ import javax.persistence.Enumerated
 @Entity
 class SysUser(
     @Column(nullable = false, unique = true) private var username: String,
-    @Column(nullable = false) private var password: String,
+    @Column(nullable = false) @JsonIgnore private var password: String,
     @Column(nullable = false) @Enumerated(EnumType.STRING) var role: SysRole = SysRole.NORMAL,
 ) : Data(), UserDetails {
 
