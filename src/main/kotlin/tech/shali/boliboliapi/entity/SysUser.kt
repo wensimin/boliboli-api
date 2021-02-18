@@ -10,8 +10,8 @@ import javax.persistence.Enumerated
 
 @Entity
 class SysUser(
-    @Column(nullable = false) private var password: String,
     @Column(nullable = false, unique = true) private var username: String,
+    @Column(nullable = false) private var password: String,
     @Column(nullable = false) @Enumerated(EnumType.STRING) var role: SysRole = SysRole.NORMAL,
 ) : Data(), UserDetails {
 
