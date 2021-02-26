@@ -2,14 +2,12 @@ package tech.shali.boliboliapi.config
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.data.redis.connection.RedisConnectionFactory
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
-import org.springframework.security.oauth2.provider.token.TokenStore
-import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
 
 @Configuration
-class BeanConfig(private val redisConnection: RedisConnectionFactory) {
+class BeanConfig {
     /**
      * 密码加密方式
      *
@@ -21,10 +19,13 @@ class BeanConfig(private val redisConnection: RedisConnectionFactory) {
     }
 
     /**
-     * token使用redis
+     * 自定义转换jwt的权限
      */
     @Bean
-    fun tokenStore(): TokenStore {
-        return RedisTokenStore(redisConnection);
+    fun jwtAuthenticationConverter(): JwtAuthenticationConverter {
+        val jwtAuthenticationConverter = JwtAuthenticationConverter()
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(JwtAuthConverter())
+        return jwtAuthenticationConverter
     }
+
 }
