@@ -11,8 +11,11 @@ import org.springframework.security.oauth2.jwt.Jwt
 class JwtAuthConverter : Converter<Jwt, Collection<GrantedAuthority>> {
     override fun convert(source: Jwt): Collection<GrantedAuthority> {
         // scope & auth 本项目 混用
-        val scope = source.getClaim<Collection<String>>("scope")
-        val auth = source.getClaim<Collection<String>>("auth")
-        return (scope + auth).map { s -> SimpleGrantedAuthority(s) }
+        val scope = source.getClaim<Collection<String>?>("scope")
+        val auth = source.getClaim<Collection<String>?>("auth")
+        val list = ArrayList<String>()
+        list.addAll(scope ?: emptyList())
+        list.addAll(auth ?: emptyList())
+        return list.map { s -> SimpleGrantedAuthority(s) }
     }
 }
