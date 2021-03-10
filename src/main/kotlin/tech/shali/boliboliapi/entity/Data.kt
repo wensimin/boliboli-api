@@ -10,9 +10,9 @@ import javax.persistence.MappedSuperclass
 @MappedSuperclass
 @EntityListeners(DataEntityListener::class)
 open class Data(
+    @Id @Column(nullable = false) var id: String = UUID.randomUUID().toString(),
     @Column(nullable = false) var createDate: Date = Date(),
-    @Column(nullable = false) var updateDate: Date = Date(),
-    @Id @Column(nullable = false) var id: String = UUID.randomUUID().toString()
+    @Column(nullable = false) var updateDate: Date = Date()
 ) {
 
     fun beforeUpdate() {
