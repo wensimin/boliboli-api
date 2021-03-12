@@ -1,6 +1,7 @@
 package tech.shali.boliboliapi.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ArrayNode
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.slf4j.Logger
@@ -14,6 +15,7 @@ import tech.shali.boliboliapi.dao.VoiceTagDao
 import tech.shali.boliboliapi.entity.Voice
 import tech.shali.boliboliapi.entity.VoiceTag
 import tech.shali.boliboliapi.pojo.KeywordQueryVo
+import java.io.File
 import java.util.*
 
 
@@ -35,7 +37,8 @@ class VoiceService(
      */
     @Transactional
     fun loadEntityByDlsiteFile(dlsiteId: String, path: String) {
-        if (!this.isNeedLoadDLFile(dlsiteId)) return
+        // test
+//        if (!this.isNeedLoadDLFile(dlsiteId)) return
         val doc = Jsoup.connect("https://www.dlsite.com/maniax/work/=/product_id/$dlsiteId.html/")
             .proxy(resourceProperties.proxy.host, resourceProperties.proxy.port).get()
         val tagMaps = this.getTagsMap(doc)
@@ -48,9 +51,30 @@ class VoiceService(
         val voice = Voice(title, dlsiteId, mainImg, tags)
         voice.R18 = isR18(tagMaps)
         this.voiceDao.save(voice)
-        //TODO JSON TREE
-        objectMapper.createObjectNode()
+        // 获取文件树json
+        val treeJson = this.readJsonByFile(path).toString()
+
     }
+
+    /**
+     * 递归把文件树转json Array
+     */
+    private fun readJsonByFile(startDir: String): ArrayNode {
+        val dir = File(startDir)
+        val array = objectMapper.createArrayNode()
+        val files = dir.listFiles()
+        files?.forEach { file ->
+            if (file.isDirectory) {
+                val node = array.addObject()
+                node.putArray(file.name).addAll(readJsonByFile(file.absolutePath))
+            } else {
+                //TODO create file
+                array.add(file.name)
+            }
+        }
+        return array
+    }
+
 
     private fun isR18(tagMaps: LinkedHashMap<String, Set<String>>): Boolean {
         return tagMaps["年齢指定"]?.first() == "18禁"
