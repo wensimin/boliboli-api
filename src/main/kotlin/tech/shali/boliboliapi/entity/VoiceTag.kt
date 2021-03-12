@@ -11,5 +11,5 @@ class VoiceTag(
     @Column(nullable = false)
     val key: String,
     @ElementCollection(fetch = FetchType.EAGER)
-    val values: Set<String>
+    val values: List<String>
 ) : Data()

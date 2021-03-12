@@ -46,7 +46,7 @@ class VoiceService(
         val mainImg = this.getMainImg(doc)
         log.info("id=$dlsiteId path=$path title=$title mainImg=$mainImg")
         log.info("id=$dlsiteId tags= $tagMaps")
-        val tags = tagMaps.map { (k, v) -> VoiceTag(k, v) }.toSet()
+        val tags = tagMaps.map { (k, v) -> VoiceTag(k, v) }
         this.voiceTagDao.saveAll(tags)
         val voice = Voice(title, dlsiteId, mainImg, tags)
         voice.R18 = isR18(tagMaps)
@@ -76,7 +76,7 @@ class VoiceService(
     }
 
 
-    private fun isR18(tagMaps: LinkedHashMap<String, Set<String>>): Boolean {
+    private fun isR18(tagMaps: LinkedHashMap<String, List<String>>): Boolean {
         return tagMaps["年齢指定"]?.first() == "18禁"
     }
 
@@ -93,14 +93,14 @@ class VoiceService(
     /**
      * 获取所有tag
      */
-    private fun getTagsMap(doc: Document): LinkedHashMap<String, Set<String>> {
+    private fun getTagsMap(doc: Document): LinkedHashMap<String, List<String>> {
         // 获取标签
         val tags = doc.select("#work_outline tr")
-        val tagsMap = LinkedHashMap<String, Set<String>>()
+        val tagsMap = LinkedHashMap<String, List<String>>()
         tags?.forEach { tag ->
             //key&value 将dl上分隔符' / '转换为 单一空格做分隔
             val kv = tag.text().replace(" / ", " ").trim().split(" ")
-            val value = kv.subList(1, kv.size).toSet()
+            val value = kv.subList(1, kv.size)
             tagsMap[kv.first()] = value
         }
         return tagsMap

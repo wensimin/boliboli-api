@@ -15,7 +15,7 @@ class Voice(
     @Column(nullable = false)
     val mainImg: String,
     @OneToMany(fetch = FetchType.EAGER)
-    val tags: Set<VoiceTag>
+    val tags: List<VoiceTag>
 ) : Resource() {
     init {
         var tagText = ""
