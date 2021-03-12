@@ -27,7 +27,6 @@ class LoadVoiceService(
     //TODO test 启动时测试
     @EventListener(ContextRefreshedEvent::class)
     fun loadEntityByFile() {
-//        val result = voiceService.findByKeyword("天知遥")
         resourceProperties.voicePaths.forEach(this::loadEntityByFile)
     }
 

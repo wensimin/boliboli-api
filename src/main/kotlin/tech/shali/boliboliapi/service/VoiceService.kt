@@ -5,6 +5,7 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.data.domain.Page
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import tech.shali.boliboliapi.config.ResourceProperties
@@ -12,6 +13,7 @@ import tech.shali.boliboliapi.dao.VoiceDao
 import tech.shali.boliboliapi.dao.VoiceTagDao
 import tech.shali.boliboliapi.entity.Voice
 import tech.shali.boliboliapi.entity.VoiceTag
+import tech.shali.boliboliapi.pojo.KeywordQueryVo
 import java.util.*
 
 
@@ -24,8 +26,8 @@ class VoiceService(
 ) {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
 
-    fun findByKeyword(keyword: String): List<Voice> {
-        return voiceDao.findByKeyTextLike("%$keyword%")
+    fun findByKeyword(keywordQueryVo: KeywordQueryVo): Page<List<Voice>> {
+        return voiceDao.findByKeyTextLike("%${keywordQueryVo.keyword}%", keywordQueryVo.toPageRequest())
     }
 
     /**
@@ -85,7 +87,6 @@ class VoiceService(
      * 检查文件是否需要读取
      */
     private fun isNeedLoadDLFile(dlsiteId: String): Boolean {
-        //TODO 检查是否需要再读取数据
         return voiceDao.findByRJId(dlsiteId) == null
     }
 }
