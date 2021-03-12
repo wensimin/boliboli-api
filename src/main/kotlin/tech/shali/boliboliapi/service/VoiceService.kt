@@ -29,7 +29,7 @@ class VoiceService(
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
 
     fun findByKeyword(keywordQueryVo: KeywordQueryVo): Page<List<Voice>> {
-        return voiceDao.findByKeyTextLike("%${keywordQueryVo.keyword}%", keywordQueryVo.toPageRequest())
+        return voiceDao.findByKeyTextLike("%${keywordQueryVo.keyword}%", keywordQueryVo.page.toPageRequest())
     }
 
     /**
@@ -38,7 +38,7 @@ class VoiceService(
     @Transactional
     fun loadEntityByDlsiteFile(dlsiteId: String, path: String) {
         // test
-//        if (!this.isNeedLoadDLFile(dlsiteId)) return
+        if (!this.isNeedLoadDLFile(dlsiteId)) return
         val doc = Jsoup.connect("https://www.dlsite.com/maniax/work/=/product_id/$dlsiteId.html/")
             .proxy(resourceProperties.proxy.host, resourceProperties.proxy.port).get()
         val tagMaps = this.getTagsMap(doc)

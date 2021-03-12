@@ -6,11 +6,11 @@ import org.springframework.data.domain.Sort.Direction
 /**
  * 用于分页参数
  */
-open class PageVo(
-    private val page: Int = 0,
-    private val size: Int = 8,
-    private val direction: Direction = Direction.ASC,
-    private val properties: Set<String> = emptySet()
+data class PageVo(
+    var page: Int = 0,
+    var size: Int = 8,
+    var direction: Direction = Direction.ASC,
+    var properties: Set<String> = emptySet()
 ) {
     fun toPageRequest(): PageRequest {
         return if (properties.isEmpty()) {
