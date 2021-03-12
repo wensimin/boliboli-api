@@ -1,65 +1,57 @@
 package tech.shali.boliboliapi.service
 
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.context.event.ContextRefreshedEvent
-import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import tech.shali.boliboliapi.config.ResourceProperties
-import java.io.File
+import tech.shali.boliboliapi.dao.VoiceDao
+import tech.shali.boliboliapi.dao.VoiceTagDao
+import tech.shali.boliboliapi.entity.Voice
+import tech.shali.boliboliapi.entity.VoiceTag
+import java.util.*
 
-//文件夹命名约定 来自dlsite的voice
-private const val DLSITE_REX: String = "[Rr][Jj][0-9]+"
 
 @Service
-class VoiceService(private val resourceProperties: ResourceProperties) {
+class VoiceService(
+    private val resourceProperties: ResourceProperties,
+    private val objectMapper: ObjectMapper,
+    private val voiceDao: VoiceDao,
+    private val voiceTagDao: VoiceTagDao
+) {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
 
-    /**
-     * 读取配置path下的文件
-     * 构建voice的entity
-     */
-    //TODO test 启动时测试
-    @EventListener(ContextRefreshedEvent::class)
-    fun loadEntityByFile() {
-        resourceProperties.voicePaths.forEach(this::loadEntityByFile)
-    }
-
-    private fun loadEntityByFile(path: String) {
-        val directoryPath = File(path)
-        val list = directoryPath.list()
-        val regex = Regex(DLSITE_REX)
-        list?.forEach { fileName ->
-            val dlsiteId = regex.find(fileName)
-            dlsiteId?.let {
-                GlobalScope.launch {
-                    try {
-                        this@VoiceService.loadEntityByDlsiteFile(dlsiteId.value, "$path/$fileName")
-                    } catch (e: Exception) {
-                        log.error("${dlsiteId.value} 发生错误 ${e.message}")
-                    }
-                }
-            }
-        }
+    fun findByKeyword(keyword: String): List<Voice> {
+        return voiceDao.findByKeyTextLike("%$keyword%")
     }
 
     /**
      * dlsite 音声
      */
-    private fun loadEntityByDlsiteFile(dlsiteId: String, fileName: String) {
+    @Transactional
+    fun loadEntityByDlsiteFile(dlsiteId: String, path: String) {
         if (!this.isNeedLoadDLFile(dlsiteId)) return
         val doc = Jsoup.connect("https://www.dlsite.com/maniax/work/=/product_id/$dlsiteId.html/")
             .proxy(resourceProperties.proxy.host, resourceProperties.proxy.port).get()
-        val tagsMap = this.getTagsMap(doc)
+        val tagMaps = this.getTagsMap(doc)
         val title = this.getTitle(doc)
         val mainImg = this.getMainImg(doc)
-        log.info("id=$dlsiteId file=$fileName title=$title mainImg=$mainImg")
-        log.info("id=$dlsiteId tags= $tagsMap")
+        log.info("id=$dlsiteId path=$path title=$title mainImg=$mainImg")
+        log.info("id=$dlsiteId tags= $tagMaps")
+        val tags = tagMaps.map { (k, v) -> VoiceTag(k, v) }.toSet()
+        this.voiceTagDao.saveAll(tags)
+        val voice = Voice(title, dlsiteId, mainImg, tags)
+        voice.R18 = isR18(tagMaps)
+        this.voiceDao.save(voice)
+        //TODO JSON TREE
+        objectMapper.createObjectNode()
+    }
 
+    private fun isR18(tagMaps: LinkedHashMap<String, Set<String>>): Boolean {
+        return tagMaps["年齢指定"]?.first() == "18禁"
     }
 
     private fun getMainImg(doc: Document): String {
@@ -75,25 +67,26 @@ class VoiceService(private val resourceProperties: ResourceProperties) {
     /**
      * 获取所有tag
      */
-    private fun getTagsMap(doc: Document): LinkedHashMap<String, List<String>> {
+    private fun getTagsMap(doc: Document): LinkedHashMap<String, Set<String>> {
         // 获取标签
         val tags = doc.select("#work_outline tr")
-        val tagsMap = LinkedHashMap<String, List<String>>()
+        val tagsMap = LinkedHashMap<String, Set<String>>()
         tags?.forEach { tag ->
             //key&value 将dl上分隔符' / '转换为 单一空格做分隔
             val kv = tag.text().replace(" / ", " ").trim().split(" ")
-            val value = kv.subList(1, kv.size)
+            val value = kv.subList(1, kv.size).toSet()
             tagsMap[kv.first()] = value
         }
         return tagsMap
     }
+
 
     /**
      * 检查文件是否需要读取
      */
     private fun isNeedLoadDLFile(dlsiteId: String): Boolean {
         //TODO 检查是否需要再读取数据
-        return true
+        return voiceDao.findByRJId(dlsiteId) == null
     }
 }
 
