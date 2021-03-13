@@ -7,9 +7,12 @@ import org.jsoup.nodes.Document
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import tech.shali.boliboliapi.config.Auth
 import tech.shali.boliboliapi.config.ResourceProperties
+import tech.shali.boliboliapi.config.checkAuth
 import tech.shali.boliboliapi.dao.VoiceDao
 import tech.shali.boliboliapi.dao.VoiceMediaDao
 import tech.shali.boliboliapi.dao.VoiceTagDao
@@ -32,8 +35,13 @@ class VoiceService(
 ) {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
 
-    fun findByKeyword(keywordQueryVo: KeywordQueryVo): Page<List<Voice>> {
-        return voiceDao.findByKeyTextLike("%${keywordQueryVo.keyword}%", keywordQueryVo.page.toPageRequest())
+    fun findByKeyword(keywordQueryVo: KeywordQueryVo, token: JwtAuthenticationToken): Page<List<Voice>> {
+        if (keywordQueryVo.r18) token.checkAuth(Auth.R18)
+        return voiceDao.findByKeyTextLikeAndR18(
+            "%${keywordQueryVo.keyword}%",
+            keywordQueryVo.r18,
+            keywordQueryVo.page.toPageRequest()
+        )
     }
 
     /**
@@ -54,7 +62,7 @@ class VoiceService(
         val tags = tagMaps.map { (k, v) -> VoiceTag(k, v) }
         this.voiceTagDao.saveAll(tags)
         val voice = Voice(title, dlsiteId, mainImg, url, tags)
-        voice.R18 = isR18(tagMaps)
+        voice.r18 = isR18(tagMaps)
         this.voiceDao.save(voice).let {
             // 获取文件树json 之后再保存
             val treeJson = this.readJsonByFile(voice, path).toString()
@@ -131,7 +139,7 @@ class VoiceService(
      * 目前实现为未存在该数据即进行读取
      */
     private fun isNeedLoadDLFile(dlsiteId: String): Boolean {
-        return voiceDao.findByRJId(dlsiteId) == null
+        return voiceDao.findByRjId(dlsiteId) == null
     }
 }
 

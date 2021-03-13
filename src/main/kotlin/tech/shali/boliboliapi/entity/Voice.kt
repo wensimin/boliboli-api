@@ -11,7 +11,7 @@ class Voice(
     @Column(nullable = false)
     val title: String,
     @Column(nullable = false, unique = true)
-    val RJId: String,
+    val rjId: String,
     @Column(nullable = false)
     val mainImg: String,
     @Column(nullable = false)
@@ -26,6 +26,6 @@ class Voice(
         tags.forEach { tag ->
             tagText += tag.values.joinToString()
         }
-        keyText = title + RJId + tagText
+        keyText = title + rjId + tagText
     }
 }

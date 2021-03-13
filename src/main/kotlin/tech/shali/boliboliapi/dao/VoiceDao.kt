@@ -7,8 +7,8 @@ import tech.shali.boliboliapi.entity.Voice
 
 interface VoiceDao : JpaRepository<Voice, String> {
 
-    fun findByRJId(dlsiteId: String): Voice?
+    fun findByRjId(dlsiteId: String): Voice?
 
-    fun findByKeyTextLike(keyword: String, pageable: Pageable): Page<List<Voice>>
+    fun findByKeyTextLikeAndR18(keyword: String, R18: Boolean, pageable: Pageable): Page<List<Voice>>
 
 }
