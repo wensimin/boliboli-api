@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.stereotype.Service
@@ -31,9 +30,9 @@ class VoiceService(
     private val objectMapper: ObjectMapper,
     private val voiceDao: VoiceDao,
     private val voiceTagDao: VoiceTagDao,
-    private val voiceMediaDao: VoiceMediaDao
+    private val voiceMediaDao: VoiceMediaDao,
+    private val log: Logger
 ) {
-    private val log: Logger = LoggerFactory.getLogger(this::class.java)
 
     fun findByKeyword(keywordQueryVo: KeywordQueryVo, token: JwtAuthenticationToken): Page<List<Voice>> {
         if (keywordQueryVo.r18) token.checkAuth(Auth.R18)
