@@ -5,7 +5,9 @@ import javax.persistence.Lob
 import javax.persistence.MappedSuperclass
 
 /**
- * 所有resource公用属性
+ * resource公用属性
+ * resource 的定义为一个单独的资源，如音声&视频合集之类
+ * 与media为 @oneToMany 关系
  */
 @MappedSuperclass
 open class Resource(
@@ -15,5 +17,11 @@ open class Resource(
      */
     @Type(type = "org.hibernate.type.TextType")
     @Lob
-    var keyText: String = ""
+    var keyText: String = "",
+    /**
+     * 文件目录的json tree
+     */
+    @Type(type = "org.hibernate.type.TextType")
+    @Lob
+    var fileTree: String = ""
 ) : Data()

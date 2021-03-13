@@ -17,6 +17,8 @@ class Voice(
     @OneToMany(fetch = FetchType.EAGER)
     val tags: List<VoiceTag>
 ) : Resource() {
+
+
     init {
         var tagText = ""
         tags.forEach { tag ->

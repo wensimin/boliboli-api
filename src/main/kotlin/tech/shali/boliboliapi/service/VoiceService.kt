@@ -11,9 +11,12 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import tech.shali.boliboliapi.config.ResourceProperties
 import tech.shali.boliboliapi.dao.VoiceDao
+import tech.shali.boliboliapi.dao.VoiceMediaDao
 import tech.shali.boliboliapi.dao.VoiceTagDao
 import tech.shali.boliboliapi.entity.Voice
+import tech.shali.boliboliapi.entity.VoiceMedia
 import tech.shali.boliboliapi.entity.VoiceTag
+import tech.shali.boliboliapi.entity.base.getType
 import tech.shali.boliboliapi.pojo.KeywordQueryVo
 import java.io.File
 import java.util.*
@@ -24,7 +27,8 @@ class VoiceService(
     private val resourceProperties: ResourceProperties,
     private val objectMapper: ObjectMapper,
     private val voiceDao: VoiceDao,
-    private val voiceTagDao: VoiceTagDao
+    private val voiceTagDao: VoiceTagDao,
+    private val voiceMediaDao: VoiceMediaDao
 ) {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
 
@@ -50,26 +54,40 @@ class VoiceService(
         this.voiceTagDao.saveAll(tags)
         val voice = Voice(title, dlsiteId, mainImg, tags)
         voice.R18 = isR18(tagMaps)
-        this.voiceDao.save(voice)
-        // 获取文件树json
-        val treeJson = this.readJsonByFile(path).toString()
-
+        this.voiceDao.save(voice).let {
+            // 获取文件树json 之后再保存
+            val treeJson = this.readJsonByFile(voice, path).toString()
+            it.fileTree = treeJson
+            this.voiceDao.save(it)
+        }
     }
 
     /**
      * 递归把文件树转json Array
+     * 这个过程中会创建相关的子media
      */
-    private fun readJsonByFile(startDir: String): ArrayNode {
+    private fun readJsonByFile(voice: Voice, startDir: String): ArrayNode {
         val dir = File(startDir)
         val array = objectMapper.createArrayNode()
         val files = dir.listFiles()
         files?.forEach { file ->
             if (file.isDirectory) {
                 val node = array.addObject()
-                node.putArray(file.name).addAll(readJsonByFile(file.absolutePath))
+                node.putArray(file.name).addAll(readJsonByFile(voice, file.absolutePath))
             } else {
-                //TODO create file
-                array.add(file.name)
+                // 处理需要处理的文件类型并且保存json
+                val type = getType(file.extension)
+                if (type == null) {
+                    log.warn("未处理 不支持的文件类型 ${file.name}")
+                } else {
+                    val media = VoiceMedia(voice, file.name, file.absolutePath, type, file.length())
+                    voiceMediaDao.save(media)
+                    array.addObject().let {
+                        it.put("name", file.name)
+                        it.put("id", media.id)
+                        it.put("type", media.type.name)
+                    }
+                }
             }
         }
         return array
