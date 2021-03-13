@@ -84,7 +84,7 @@ class VoiceService(
                     val media = VoiceMedia(voice, file.name, file.absolutePath, type, file.length())
                     voiceMediaDao.save(media)
                     array.addObject().let {
-                        it.put("name", file.name)
+                        it.put("name", media.filename)
                         it.put("id", media.id)
                         it.put("type", media.type.name)
                     }
