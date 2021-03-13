@@ -14,6 +14,8 @@ class Voice(
     val RJId: String,
     @Column(nullable = false)
     val mainImg: String,
+    @Column(nullable = false)
+    val url: String,
     @OneToMany(fetch = FetchType.EAGER)
     val tags: List<VoiceTag>
 ) : Resource() {

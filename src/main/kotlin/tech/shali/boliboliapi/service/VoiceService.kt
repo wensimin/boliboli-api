@@ -41,9 +41,10 @@ class VoiceService(
      */
     @Transactional
     fun loadEntityByDlsiteFile(dlsiteId: String, path: String) {
-        // test
+        // 检查是否需要读取该音声的数据
         if (!this.isNeedLoadDLFile(dlsiteId)) return
-        val doc = Jsoup.connect("https://www.dlsite.com/maniax/work/=/product_id/$dlsiteId.html/")
+        val url = "https://www.dlsite.com/maniax/work/=/product_id/$dlsiteId.html/"
+        val doc = Jsoup.connect(url)
             .proxy(resourceProperties.proxy.host, resourceProperties.proxy.port).get()
         val tagMaps = this.getTagsMap(doc)
         val title = this.getTitle(doc)
@@ -52,7 +53,7 @@ class VoiceService(
         log.info("id=$dlsiteId tags= $tagMaps")
         val tags = tagMaps.map { (k, v) -> VoiceTag(k, v) }
         this.voiceTagDao.saveAll(tags)
-        val voice = Voice(title, dlsiteId, mainImg, tags)
+        val voice = Voice(title, dlsiteId, mainImg, url, tags)
         voice.R18 = isR18(tagMaps)
         this.voiceDao.save(voice).let {
             // 获取文件树json 之后再保存
@@ -127,6 +128,7 @@ class VoiceService(
 
     /**
      * 检查文件是否需要读取
+     * 目前实现为未存在该数据即进行读取
      */
     private fun isNeedLoadDLFile(dlsiteId: String): Boolean {
         return voiceDao.findByRJId(dlsiteId) == null
