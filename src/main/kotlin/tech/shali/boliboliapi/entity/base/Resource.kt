@@ -11,6 +11,9 @@ import javax.persistence.MappedSuperclass
  */
 @MappedSuperclass
 open class Resource(
+    /**
+     * r18资源 需要权限
+     */
     var r18: Boolean = false,
     /**
      * 用于查询的keyText

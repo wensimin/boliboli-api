@@ -64,7 +64,7 @@ class VoiceService(
         voice.r18 = isR18(tagMaps)
         this.voiceDao.save(voice).let {
             // 获取文件树json 之后再保存
-            val treeJson = this.readJsonByFile(voice, path).toString()
+            val treeJson = this.readJsonByFile(it, path).toString()
             it.fileTree = treeJson
             this.voiceDao.save(it)
         }
@@ -90,10 +90,10 @@ class VoiceService(
                 } else {
                     val media = VoiceMedia(voice, file.name, file.absolutePath, type, file.length())
                     voiceMediaDao.save(media)
-                    array.addObject().let {
-                        it.put("name", media.filename)
-                        it.put("id", media.id)
-                        it.put("type", media.type.name)
+                    array.addObject().apply {
+                        put("name", media.filename)
+                        put("id", media.id)
+                        put("type", media.type.name)
                     }
                 }
             }
@@ -123,9 +123,9 @@ class VoiceService(
         // 获取标签
         val tags = doc.select("#work_outline tr")
         val tagsMap = LinkedHashMap<String, List<String>>()
-        tags?.forEach { tag ->
+        tags?.forEach {
             //key&value 将dl上分隔符' / '转换为 单一空格做分隔
-            val kv = tag.text().replace(" / ", " ").trim().split(" ")
+            val kv = it.text().replace(" / ", " ").trim().split(" ")
             val value = kv.subList(1, kv.size)
             tagsMap[kv.first()] = value
         }
