@@ -45,16 +45,17 @@ class VoiceService(
 
     /**
      * dlsite 音声
-     * voice主对象只创建一次
-     * 每次调用都刷新文件树
+     * voice主对象与文件树只创建一次
+     *
      */
     @Transactional
     fun loadEntityByDlsiteFile(dlsiteId: String, path: String) {
-        (voiceDao.findByRjId(dlsiteId) ?: createVoice(dlsiteId)).also {
+        if (!isNeedLoadDLFile(dlsiteId)) {
+            return
+        }
+        createVoice(dlsiteId).also {
             // 获取文件树json且保存
-            val treeJson = this.readJsonByFile(it, path).toString()
-            // 文件树未变动则不进行更新
-            if (treeJson == it.fileTree) return
+            val treeJson = this.readJsonByFileAndSave(it, path).toString()
             it.fileTree = treeJson
             this.voiceDao.save(it)
         }
@@ -82,14 +83,14 @@ class VoiceService(
      * 递归把文件树转json Array
      * 这个过程中会创建相关的子media
      */
-    private fun readJsonByFile(voice: Voice, startDir: String): ArrayNode {
+    private fun readJsonByFileAndSave(voice: Voice, startDir: String): ArrayNode {
         val dir = File(startDir)
         val array = objectMapper.createArrayNode()
         val files = dir.listFiles()
         files?.forEach { file ->
             if (file.isDirectory) {
                 val node = array.addObject()
-                node.putArray(file.name).addAll(readJsonByFile(voice, file.absolutePath))
+                node.putArray(file.name).addAll(readJsonByFileAndSave(voice, file.absolutePath))
             } else {
                 // 处理需要处理的文件类型并且保存json
                 val type = getType(file.extension)
@@ -140,6 +141,13 @@ class VoiceService(
         return tagsMap
     }
 
+    /**
+     * 检查文件是否需要读取
+     * 目前实现为未存在该数据即进行读取
+     */
+    private fun isNeedLoadDLFile(dlsiteId: String): Boolean {
+        return voiceDao.findByRjId(dlsiteId) == null
+    }
 }
 
 

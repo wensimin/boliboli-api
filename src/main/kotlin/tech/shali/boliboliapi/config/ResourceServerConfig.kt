@@ -12,9 +12,10 @@ class ResourceServerConfig {
     @Bean
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain? {
         http
-            .authorizeRequests { config ->
-                config.anyRequest().authenticated()
-            }
+            .authorizeRequests().apply {
+                antMatchers("/admin/**").hasAuthority(Auth.ADMIN.name)
+                anyRequest().authenticated()
+            }.and()
             .oauth2ResourceServer()
             .jwt()
         return http.build()

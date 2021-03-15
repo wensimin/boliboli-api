@@ -1,7 +1,8 @@
 package tech.shali.boliboliapi.task
 
 import org.slf4j.Logger
-import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.context.event.ContextRefreshedEvent
+import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 import tech.shali.boliboliapi.service.LoadVoiceService
 
@@ -14,9 +15,9 @@ class ReadFileTask(
 
 
     /**
-     * 每60秒时读取file
+     * 工程启动时读取file
      */
-    @Scheduled(fixedRate = 60000)
+    @EventListener(ContextRefreshedEvent::class)
     fun readAllVoiceFile() {
         log.debug("read all file")
         loadVoiceService.loadEntityByAllPath()
