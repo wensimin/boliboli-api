@@ -45,29 +45,35 @@ class VoiceService(
 
     /**
      * dlsite 音声
+     * voice主对象只创建一次
+     * 每次调用都刷新文件树
      */
     @Transactional
     fun loadEntityByDlsiteFile(dlsiteId: String, path: String) {
-        // 检查是否需要读取该音声的数据
-        if (!this.isNeedLoadDLFile(dlsiteId)) return
+        (voiceDao.findByRjId(dlsiteId) ?: createVoice(dlsiteId)).also {
+            // 获取文件树json且保存
+            val treeJson = this.readJsonByFile(it, path).toString()
+            it.fileTree = treeJson
+            this.voiceDao.save(it)
+        }
+    }
+
+    /**
+     * 读取dl上的voice数据创建voice
+     */
+    private fun createVoice(dlsiteId: String): Voice {
         val url = "https://www.dlsite.com/maniax/work/=/product_id/$dlsiteId.html/"
         val doc = Jsoup.connect(url)
             .proxy(resourceProperties.proxy.host, resourceProperties.proxy.port).get()
         val tagMaps = this.getTagsMap(doc)
         val title = this.getTitle(doc)
         val mainImg = this.getMainImg(doc)
-        log.info("id=$dlsiteId path=$path title=$title mainImg=$mainImg")
-        log.info("id=$dlsiteId tags= $tagMaps")
+        log.info("new voice id=$dlsiteId title=$title mainImg=$mainImg")
         val tags = tagMaps.map { (k, v) -> VoiceTag(k, v) }
         this.voiceTagDao.saveAll(tags)
         val voice = Voice(title, dlsiteId, mainImg, url, tags)
         voice.r18 = isR18(tagMaps)
-        this.voiceDao.save(voice).let {
-            // 获取文件树json 之后再保存
-            val treeJson = this.readJsonByFile(it, path).toString()
-            it.fileTree = treeJson
-            this.voiceDao.save(it)
-        }
+        return voiceDao.save(voice)
     }
 
     /**
@@ -132,14 +138,6 @@ class VoiceService(
         return tagsMap
     }
 
-
-    /**
-     * 检查文件是否需要读取
-     * 目前实现为未存在该数据即进行读取
-     */
-    private fun isNeedLoadDLFile(dlsiteId: String): Boolean {
-        return voiceDao.findByRjId(dlsiteId) == null
-    }
 }
 
 
