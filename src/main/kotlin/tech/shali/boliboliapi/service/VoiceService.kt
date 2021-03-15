@@ -53,6 +53,8 @@ class VoiceService(
         (voiceDao.findByRjId(dlsiteId) ?: createVoice(dlsiteId)).also {
             // 获取文件树json且保存
             val treeJson = this.readJsonByFile(it, path).toString()
+            // 文件树未变动则不进行更新
+            if (treeJson == it.fileTree) return
             it.fileTree = treeJson
             this.voiceDao.save(it)
         }
