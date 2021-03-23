@@ -31,7 +31,7 @@ class GlobalExceptionHandler(private val log: Logger) {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(value = [SystemException::class])
     fun exception(e: SystemException): ErrorResponse {
-        return ErrorResponse(e.type, e.message)
+        return ErrorResponse(e.error, e.message)
     }
 
 }

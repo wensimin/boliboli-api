@@ -4,5 +4,5 @@ import tech.shali.boliboliapi.handler.ErrorType
 
 class SystemException(
     override val message: String,
-    val type: ErrorType = ErrorType.ERROR
+    val error: ErrorType = ErrorType.ERROR
 ) : RuntimeException()
