@@ -20,9 +20,10 @@ class VoiceMediaController(private val voiceMediaService: VoiceMediaService) {
     fun get(@PathVariable id: String, token: JwtAuthenticationToken): ResponseEntity<InputStreamResource> {
         val file = voiceMediaService.get(id, token)
         val resource = InputStreamResource(FileInputStream(file))
+//        val filename = URLEncoder.encode(file.name, StandardCharsets.UTF_8.toString())
         return ResponseEntity.ok()
-            //TODO header会乱码,暂时不使用
-//            .header("Content-Disposition", "attachment; filename=${file.name}")
+            //TODO 文件名乱码,注释的处理方式可能对浏览器有效,未测试
+//            .header("Content-Disposition", "attachment; filename*=UTF-8''$filename")
             .contentLength(file.length())
             .contentType(MediaType.APPLICATION_OCTET_STREAM)
             .body(resource)
