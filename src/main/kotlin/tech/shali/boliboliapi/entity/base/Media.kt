@@ -6,19 +6,7 @@ import javax.persistence.EnumType
 import javax.persistence.Enumerated
 import javax.persistence.MappedSuperclass
 
-private val IMAGE_EXTENSION: Regex = Regex("(png|jpg|gif|bmp|jpeg|PNG|JPG|GIF|BMP|JPEG)")
-private val VIDEO_EXTENSION: Regex = Regex("(mp4|MP4|rmvb|RMVB|mkv|MKV|wmv|WMV|AVI|avi)")
-private val AUDIO_EXTENSION: Regex = Regex("(mp3|wav|flac|MP3|WAV|FLAC)")
-private val TEXT_EXTENSION: Regex = Regex("(txt|TXT|pdf|PDF)")
-private val LRC_EXTENSION: Regex = Regex("(lrc|ass|LRC|ASS)")
 
-private val MEDIA_MATCHER: Map<MediaType, Regex> = mapOf(
-    IMAGE to IMAGE_EXTENSION,
-    VIDEO to VIDEO_EXTENSION,
-    AUDIO to AUDIO_EXTENSION,
-    TEXT to TEXT_EXTENSION,
-    LRC to LRC_EXTENSION
-)
 
 @MappedSuperclass
 open class Media(
@@ -31,17 +19,36 @@ open class Media(
     var type: MediaType,
     @Column(nullable = true)
     var size: Long,
-) : Data()
+) : Data() {
+    companion object {
+        private val IMAGE_EXTENSION: Regex = Regex("(png|jpg|gif|bmp|jpeg|PNG|JPG|GIF|BMP|JPEG)")
+        private val VIDEO_EXTENSION: Regex = Regex("(mp4|MP4|rmvb|RMVB|mkv|MKV|wmv|WMV|AVI|avi)")
+        private val AUDIO_EXTENSION: Regex = Regex("(mp3|wav|flac|MP3|WAV|FLAC)")
+        private val TEXT_EXTENSION: Regex = Regex("(txt|TXT|pdf|PDF)")
+        private val LRC_EXTENSION: Regex = Regex("(lrc|ass|LRC|ASS)")
 
-/**
- * 获取扩展名对应的类型
- */
-fun getType(extension: String): MediaType? {
-    var mediaType: MediaType? = null
-    MEDIA_MATCHER.forEach { (type, matcher) ->
-        if (matcher.matches(extension)) {
-            mediaType = type
+        private val MEDIA_MATCHER: Map<MediaType, Regex> = mapOf(
+            IMAGE to IMAGE_EXTENSION,
+            VIDEO to VIDEO_EXTENSION,
+            AUDIO to AUDIO_EXTENSION,
+            TEXT to TEXT_EXTENSION,
+            LRC to LRC_EXTENSION
+        )
+
+        /**
+         * 获取扩展名对应的类型
+         */
+        fun getType(extension: String): MediaType? {
+            var mediaType: MediaType? = null
+            MEDIA_MATCHER.forEach { (type, matcher) ->
+                if (matcher.matches(extension)) {
+                    mediaType = type
+                }
+            }
+            return mediaType
         }
     }
-    return mediaType
+
+
 }
+

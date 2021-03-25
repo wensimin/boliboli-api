@@ -16,7 +16,6 @@ fun JwtAuthenticationToken.hasAuth(auth: Auth): Boolean {
  *
  */
 fun JwtAuthenticationToken.checkAuth(auth: Auth) {
-    //TODO 权限异常&错误公共处理
     if (!hasAuth(auth)) throw SystemException("权限不足", ErrorType.AUTH)
 }
 

@@ -1,5 +1,6 @@
 package tech.shali.boliboliapi.service
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import org.jsoup.Jsoup
@@ -18,8 +19,14 @@ import tech.shali.boliboliapi.dao.VoiceTagDao
 import tech.shali.boliboliapi.entity.Voice
 import tech.shali.boliboliapi.entity.VoiceMedia
 import tech.shali.boliboliapi.entity.VoiceTag
-import tech.shali.boliboliapi.entity.base.getType
+import tech.shali.boliboliapi.entity.base.Media
+import tech.shali.boliboliapi.entity.base.MediaType
+import tech.shali.boliboliapi.handler.ErrorType
 import tech.shali.boliboliapi.pojo.KeywordQueryVo
+import tech.shali.boliboliapi.pojo.VoiceInfo
+import tech.shali.boliboliapi.pojo.exception.SystemException
+import tech.shali.boliboliapi.pojo.projections.SimpleVoice
+import tech.shali.boliboliapi.utils.copyPropsTo
 import java.io.File
 import java.util.*
 
@@ -34,7 +41,10 @@ class VoiceService(
     private val log: Logger
 ) {
 
-    fun findByKeyword(keywordQueryVo: KeywordQueryVo, token: JwtAuthenticationToken): Page<List<Voice>> {
+    /**
+     * 关键字查询
+     */
+    fun findByKeyword(keywordQueryVo: KeywordQueryVo, token: JwtAuthenticationToken): Page<List<SimpleVoice>> {
         if (keywordQueryVo.r18) token.checkAuth(Auth.R18)
         return voiceDao.findByKeyTextLikeAndR18(
             "%${keywordQueryVo.keyword}%",
@@ -42,6 +52,72 @@ class VoiceService(
             keywordQueryVo.page.toPageRequest()
         )
     }
+
+    /**
+     * id info
+     */
+    fun info(id: String, token: JwtAuthenticationToken): VoiceInfo {
+        val voice = voiceDao.findById(id).or {
+            throw SystemException("未找到音声", ErrorType.NOT_FOUND)
+        }.get()
+        return voice.copyPropsTo(VoiceInfo::class).apply {
+            val node: ArrayNode = objectMapper.readTree(voice.fileTree) as ArrayNode
+            fileTree2Medias(node, medias)
+        }
+    }
+
+    /**
+     * 把整个文件树转化成2层树
+     *
+     */
+    private fun fileTree2Medias(
+        node: JsonNode,
+        medias: MutableMap<MediaType, MutableMap<String, MutableList<VoiceInfo.SimpleVoiceMedia>>>,
+        parent: String = ""
+    ) {
+        if (node.isArray) {
+            node.forEach {
+                fileTree2Medias(it, medias, parent)
+            }
+        } else if (node.isObject) {
+            // 拥有id的为left object
+            if (node.has("id")) {
+                readLeafObject(node, medias, parent)
+            } else {
+                node.fields().forEach {
+                    val newParent = if (parent.isEmpty()) it.key else "$parent.${it.key}"
+                    fileTree2Medias(it.value, medias, newParent)
+                }
+            }
+        }
+    }
+
+    /**
+     * 读取叶子节点
+     */
+    private fun readLeafObject(
+        node: JsonNode,
+        medias: MutableMap<MediaType, MutableMap<String, MutableList<VoiceInfo.SimpleVoiceMedia>>>,
+        parent: String
+    ) {
+        val type = MediaType.valueOf(node["type"].asText())
+        var typeMap = medias[type]
+        if (typeMap == null) {
+            typeMap = linkedMapOf()
+            medias[type] = typeMap
+        }
+        var list = typeMap[parent]
+        if (list == null) {
+            list = LinkedList()
+            typeMap[parent] = list
+        }
+        list.add(
+            VoiceInfo.SimpleVoiceMedia(
+                node["id"].asText(), node["name"].asText()
+            )
+        )
+    }
+
 
     /**
      * dlsite 音声
@@ -93,7 +169,7 @@ class VoiceService(
                 node.putArray(file.name).addAll(readJsonByFileAndSave(voice, file.absolutePath))
             } else {
                 // 处理需要处理的文件类型并且保存json
-                val type = getType(file.extension)
+                val type = Media.getType(file.extension)
                 if (type == null) {
                     log.warn("未处理 不支持的文件类型 ${file.name}")
                 } else {
@@ -148,6 +224,7 @@ class VoiceService(
     private fun isNeedLoadDLFile(dlsiteId: String): Boolean {
         return voiceDao.findByRjId(dlsiteId) == null
     }
+
 }
 
 

@@ -11,9 +11,9 @@ import javax.persistence.MappedSuperclass
 @EntityListeners(DataEntityListener::class)
 open class Data(
     @Id @Column(nullable = false)
-    val id: String = UUID.randomUUID().toString(),
+    var id: String = UUID.randomUUID().toString(),
     @Column(nullable = false)
-    val createDate: Date = Date(),
+    var createDate: Date = Date(),
     @Column(nullable = false)
     var updateDate: Date = Date()
 ) {

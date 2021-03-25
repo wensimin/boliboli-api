@@ -7,8 +7,7 @@ import org.springframework.stereotype.Service
 import tech.shali.boliboliapi.config.ResourceProperties
 import java.io.File
 
-//文件夹命名约定 来自dlsite的voice
-private val DLSITE_REX: Regex = Regex("RJ[0-9]+")
+
 
 @Service
 class LoadVoiceService(
@@ -16,6 +15,11 @@ class LoadVoiceService(
     private val resourceProperties: ResourceProperties,
     private val log: Logger
 ) {
+
+    companion object {
+        //文件夹命名约定 来自dlsite的voice
+        private val DLSITE_REX: Regex = Regex("RJ[0-9]+")
+    }
 
     /**
      * 读取配置path下的文件
