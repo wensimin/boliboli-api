@@ -26,6 +26,7 @@ class Voice(
         tags.forEach { tag ->
             tagText += tag.values.joinToString()
         }
+        // 关键字目前由title 和rj id 以及tags
         keyText = title + rjId + tagText
     }
 }

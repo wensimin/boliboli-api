@@ -1,8 +1,5 @@
 package tech.shali.boliboliapi.service
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ArrayNode
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.slf4j.Logger
@@ -14,31 +11,26 @@ import tech.shali.boliboliapi.config.Auth
 import tech.shali.boliboliapi.config.ResourceProperties
 import tech.shali.boliboliapi.config.checkAuth
 import tech.shali.boliboliapi.dao.VoiceDao
-import tech.shali.boliboliapi.dao.VoiceMediaDao
 import tech.shali.boliboliapi.dao.VoiceTagDao
 import tech.shali.boliboliapi.entity.Voice
-import tech.shali.boliboliapi.entity.VoiceMedia
 import tech.shali.boliboliapi.entity.VoiceTag
-import tech.shali.boliboliapi.entity.base.Media
-import tech.shali.boliboliapi.entity.base.MediaType
 import tech.shali.boliboliapi.handler.ErrorType
 import tech.shali.boliboliapi.pojo.KeywordQueryVo
 import tech.shali.boliboliapi.pojo.VoiceInfo
 import tech.shali.boliboliapi.pojo.exception.SystemException
 import tech.shali.boliboliapi.pojo.projections.SimpleVoice
 import tech.shali.boliboliapi.utils.copyPropsTo
-import java.io.File
 import java.util.*
 
 
 @Service
 class VoiceService(
     private val resourceProperties: ResourceProperties,
-    private val objectMapper: ObjectMapper,
     private val voiceDao: VoiceDao,
     private val voiceTagDao: VoiceTagDao,
-    private val voiceMediaDao: VoiceMediaDao,
+    private val voiceMediaService: VoiceMediaService,
     private val log: Logger
+
 ) {
 
     /**
@@ -60,62 +52,9 @@ class VoiceService(
         val voice = voiceDao.findById(id).or {
             throw SystemException("未找到音声", ErrorType.NOT_FOUND)
         }.get()
-        return voice.copyPropsTo(VoiceInfo::class).apply {
-            val node: ArrayNode = objectMapper.readTree(voice.fileTree) as ArrayNode
-            fileTree2Medias(node, medias)
-        }
-    }
-
-    /**
-     * 把整个文件树转化成2层树
-     *
-     */
-    private fun fileTree2Medias(
-        node: JsonNode,
-        medias: MutableMap<MediaType, MutableMap<String, MutableList<VoiceInfo.SimpleVoiceMedia>>>,
-        parent: String = ""
-    ) {
-        if (node.isArray) {
-            node.forEach {
-                fileTree2Medias(it, medias, parent)
-            }
-        } else if (node.isObject) {
-            // 拥有id的为left object
-            if (node.has("id")) {
-                readLeafObject(node, medias, parent)
-            } else {
-                node.fields().forEach {
-                    val newParent = if (parent.isEmpty()) it.key else "$parent.${it.key}"
-                    fileTree2Medias(it.value, medias, newParent)
-                }
-            }
-        }
-    }
-
-    /**
-     * 读取叶子节点
-     */
-    private fun readLeafObject(
-        node: JsonNode,
-        medias: MutableMap<MediaType, MutableMap<String, MutableList<VoiceInfo.SimpleVoiceMedia>>>,
-        parent: String
-    ) {
-        val type = MediaType.valueOf(node["type"].asText())
-        var typeMap = medias[type]
-        if (typeMap == null) {
-            typeMap = linkedMapOf()
-            medias[type] = typeMap
-        }
-        var list = typeMap[parent]
-        if (list == null) {
-            list = LinkedList()
-            typeMap[parent] = list
-        }
-        list.add(
-            VoiceInfo.SimpleVoiceMedia(
-                node["id"].asText(), node["name"].asText()
-            )
-        )
+        if (voice.r18) token.checkAuth(Auth.R18)
+        val medias = voiceMediaService.findByVoice(voice)
+        return VoiceInfo(voice, medias.map { it.copyPropsTo(VoiceInfo.SimpleVoiceMedia::class) })
     }
 
 
@@ -129,11 +68,10 @@ class VoiceService(
         if (!isNeedLoadDLFile(dlsiteId)) {
             return
         }
+        // 创建本体 voice
         createVoice(dlsiteId).also {
-            // 获取文件树json且保存
-            val treeJson = this.readJsonByFileAndSave(it, path).toString()
-            it.fileTree = treeJson
-            this.voiceDao.save(it)
+            // 创建相关media
+            voiceMediaService.createVoiceMedia(it, path)
         }
     }
 
@@ -153,37 +91,6 @@ class VoiceService(
         val voice = Voice(title, dlsiteId, mainImg, url, tags)
         voice.r18 = isR18(tagMaps)
         return voiceDao.save(voice)
-    }
-
-    /**
-     * 递归把文件树转json Array
-     * 这个过程中会创建相关的子media
-     */
-    private fun readJsonByFileAndSave(voice: Voice, startDir: String): ArrayNode {
-        val dir = File(startDir)
-        val array = objectMapper.createArrayNode()
-        val files = dir.listFiles()
-        files?.forEach { file ->
-            if (file.isDirectory) {
-                val node = array.addObject()
-                node.putArray(file.name).addAll(readJsonByFileAndSave(voice, file.absolutePath))
-            } else {
-                // 处理需要处理的文件类型并且保存json
-                val type = Media.getType(file.extension)
-                if (type == null) {
-                    log.warn("未处理 不支持的文件类型 ${file.name}")
-                } else {
-                    val media = VoiceMedia(voice, file.name, file.absolutePath, type, file.length())
-                    voiceMediaDao.save(media)
-                    array.addObject().apply {
-                        put("name", media.filename)
-                        put("id", media.id)
-                        put("type", media.type.name)
-                    }
-                }
-            }
-        }
-        return array
     }
 
 

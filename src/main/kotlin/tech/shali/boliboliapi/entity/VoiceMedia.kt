@@ -9,5 +9,9 @@ import javax.persistence.ManyToOne
 class VoiceMedia(
     @ManyToOne
     val voice: Voice,
-    filename: String, path: String, type: MediaType, size: Long
-) : Media(filename, path, type, size)
+    filename: String, path: String, type: MediaType, size: Long, trackLength: Long?,
+    /**
+     * 所在相对文件夹
+     */
+    var folder: String = ""
+) : Media(filename, path, type, size, trackLength)

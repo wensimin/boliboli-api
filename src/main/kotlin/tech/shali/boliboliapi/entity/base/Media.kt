@@ -19,6 +19,10 @@ open class Media(
     var type: MediaType,
     @Column(nullable = true)
     var size: Long,
+    /**
+     * 播放长度
+     */
+    var trackLength: Long? = null,
 ) : Data() {
     companion object {
         private val IMAGE_EXTENSION: Regex = Regex("(png|jpg|gif|bmp|jpeg|PNG|JPG|GIF|BMP|JPEG)")

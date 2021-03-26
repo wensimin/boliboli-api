@@ -20,11 +20,5 @@ open class Resource(
      */
     @Type(type = "org.hibernate.type.TextType")
     @Lob
-    var keyText: String = "",
-    /**
-     * 文件目录的json tree
-     */
-    @Type(type = "org.hibernate.type.TextType")
-    @Lob
-    var fileTree: String = ""
+    var keyText: String = ""
 ) : Data()

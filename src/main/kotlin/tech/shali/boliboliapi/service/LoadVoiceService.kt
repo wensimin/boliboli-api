@@ -40,7 +40,7 @@ class LoadVoiceService(
                     try {
                         voiceService.loadEntityByDlsiteFile(dlsiteId.value, "$path/$fileName")
                     } catch (e: Exception) {
-                        log.error("${dlsiteId.value} 发生错误 ${e.message}")
+                        log.error("${dlsiteId.value} 发生错误中断 ${e.message}")
                     }
                 }
             }

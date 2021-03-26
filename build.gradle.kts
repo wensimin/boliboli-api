@@ -17,6 +17,7 @@ repositories {
 }
 
 dependencies {
+    implementation("com.github.vip-zpf:jave:1.0.8")//读取音频时长用
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-security")
