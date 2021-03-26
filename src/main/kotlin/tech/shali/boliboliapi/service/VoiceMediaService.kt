@@ -51,8 +51,7 @@ class VoiceMediaService(
                     return@forEach
                 }
                 // 获取播放长度
-                val trackLength =
-                    if (type == MediaType.AUDIO || type == MediaType.VIDEO) this.countTrackLength(file) else null
+                val trackLength = this.countTrackLength(type, file)
                 val media =
                     VoiceMedia(voice, file.name, file.absolutePath, type, file.length(), trackLength, parentFolder)
                 voiceMediaDao.save(media)
@@ -61,9 +60,13 @@ class VoiceMediaService(
     }
 
     /**
-     * 计算音频文件的长度
+     * 计算文件的长度
      */
-    private fun countTrackLength(file: File): Long? {
+    private fun countTrackLength(type: MediaType, file: File): Long? {
+        // 支持视频&&音频
+        if (!(type == MediaType.AUDIO || type == MediaType.VIDEO)) {
+            return null
+        }
         return try {
             // 使用本地库ffmpeg进行长度测算
             Encoder().getInfo(file).duration
