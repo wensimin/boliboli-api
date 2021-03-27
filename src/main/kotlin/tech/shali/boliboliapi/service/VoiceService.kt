@@ -19,7 +19,6 @@ import tech.shali.boliboliapi.pojo.KeywordQueryVo
 import tech.shali.boliboliapi.pojo.VoiceInfo
 import tech.shali.boliboliapi.pojo.exception.SystemException
 import tech.shali.boliboliapi.pojo.projections.SimpleVoice
-import tech.shali.boliboliapi.utils.copyPropsTo
 import java.util.*
 
 
@@ -53,8 +52,7 @@ class VoiceService(
             throw SystemException("未找到音声", ErrorType.NOT_FOUND)
         }.get()
         if (voice.r18) token.checkAuth(Auth.R18)
-        val medias = voiceMediaService.findByVoice(voice)
-        return VoiceInfo(voice, medias.map { it.copyPropsTo(VoiceInfo.SimpleVoiceMedia::class) })
+        return VoiceInfo(voice, voiceMediaService.findByVoice(voice))
     }
 
 

@@ -14,6 +14,7 @@ import tech.shali.boliboliapi.entity.base.Media
 import tech.shali.boliboliapi.entity.base.MediaType
 import tech.shali.boliboliapi.handler.ErrorType
 import tech.shali.boliboliapi.pojo.exception.SystemException
+import tech.shali.boliboliapi.pojo.projections.SimpleVoiceMedia
 import java.io.File
 
 
@@ -76,7 +77,7 @@ class VoiceMediaService(
         }
     }
 
-    fun findByVoice(voice: Voice): List<VoiceMedia> {
+    fun findByVoice(voice: Voice): List<SimpleVoiceMedia> {
         return voiceMediaDao.findByVoice(voice)
     }
 }
