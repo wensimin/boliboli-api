@@ -1,5 +1,7 @@
 package tech.shali.boliboliapi.entity
 
+import org.hibernate.annotations.Fetch
+import org.hibernate.annotations.FetchMode
 import tech.shali.boliboliapi.entity.base.Resource
 import javax.persistence.Column
 import javax.persistence.Entity
@@ -16,6 +18,7 @@ class Voice(
     val mainImg: String,
     @Column(nullable = false)
     val url: String,
+    @Fetch(FetchMode.SELECT)
     @OneToMany(fetch = FetchType.EAGER)
     val tags: List<VoiceTag>
 ) : Resource() {

@@ -3,7 +3,7 @@ package tech.shali.boliboliapi.pojo.projections
 import tech.shali.boliboliapi.entity.base.MediaType
 
 /**
- * media文件和所在
+ * voice media 投影
  */
 interface SimpleVoiceMedia {
     val id: String

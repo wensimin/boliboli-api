@@ -10,7 +10,6 @@ interface SimpleVoice {
     val mainImg: String
     val url: String
     val r18: Boolean
-    val tags: List<SimpleVoiceTag>
 
     interface SimpleVoiceTag {
         val key: String
