@@ -1,5 +1,6 @@
 package tech.shali.boliboliapi.handler
 
+import org.apache.catalina.connector.ClientAbortException
 import org.slf4j.Logger
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -15,8 +16,10 @@ class GlobalExceptionHandler(private val log: Logger) {
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(value = [Exception::class])
-    fun exception(e: Exception): ErrorResponse {
+    fun exception(e: Exception): ErrorResponse? {
         log.error(e.message)
+        // 客户端异常不返回有效值
+        if (e is ClientAbortException) return null
         return ErrorResponse(ErrorType.ERROR, "未知错误")
     }
 
