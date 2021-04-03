@@ -17,7 +17,6 @@ class VoiceMediaController(private val voiceMediaService: VoiceMediaService) {
     @GetMapping("{id}")
     fun get(@PathVariable id: String, token: JwtAuthenticationToken): ResponseEntity<FileSystemResource> {
         val file = voiceMediaService.get(id, token)
-//        val filename = URLEncoder.encode(file.name, StandardCharsets.UTF_8.toString())
         return ResponseEntity.ok()
             .body(FileSystemResource(file))
     }
