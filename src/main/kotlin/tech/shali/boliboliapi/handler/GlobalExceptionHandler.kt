@@ -17,9 +17,9 @@ class GlobalExceptionHandler(private val log: Logger) {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler(value = [Exception::class])
     fun exception(e: Exception): ErrorResponse? {
-        log.error(e.message)
         // 客户端异常不返回有效值
         if (e is ClientAbortException) return null
+        log.error(e.message)
         return ErrorResponse(ErrorType.ERROR, "未知错误")
     }
 
