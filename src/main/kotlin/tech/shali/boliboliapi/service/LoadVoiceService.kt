@@ -33,6 +33,7 @@ class LoadVoiceService(
      * 读取指定path下的文件
      */
     fun loadEntityByPath(path: String) {
+        log.debug("read $path file")
         File(path).list()?.forEach { fileName ->
             log.debug("$fileName start read")
             val dlsiteId = DLSITE_REX.find(fileName)
