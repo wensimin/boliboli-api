@@ -43,13 +43,12 @@ open class Media(
          * 获取扩展名对应的类型
          */
         fun getType(extension: String): MediaType? {
-            var mediaType: MediaType? = null
             MEDIA_MATCHER.forEach { (type, matcher) ->
                 if (matcher.matches(extension)) {
-                    mediaType = type
+                    return type
                 }
             }
-            return mediaType
+            return null
         }
     }
 

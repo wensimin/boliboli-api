@@ -1,6 +1,7 @@
 package tech.shali.boliboliapi.controller
 
 import org.springframework.core.io.FileSystemResource
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.web.bind.annotation.GetMapping
@@ -18,6 +19,7 @@ class VoiceMediaController(private val voiceMediaService: VoiceMediaService) {
     fun get(@PathVariable id: String, token: JwtAuthenticationToken): ResponseEntity<FileSystemResource> {
         val file = voiceMediaService.get(id, token)
         return ResponseEntity.ok()
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
             .body(FileSystemResource(file))
     }
 }
