@@ -1,7 +1,5 @@
 package tech.shali.boliboliapi.service
 
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.slf4j.Logger
 import org.springframework.stereotype.Service
 import tech.shali.boliboliapi.config.ResourceProperties
@@ -35,15 +33,12 @@ class LoadVoiceService(
     fun loadEntityByPath(path: String) {
         log.debug("read $path file")
         File(path).list()?.forEach { fileName ->
-            log.debug("$fileName start read")
             val dlsiteId = DLSITE_REX.find(fileName)
             dlsiteId?.let {
-                GlobalScope.launch {
-                    try {
-                        voiceService.loadEntityByDlsiteFile(dlsiteId.value, "$path/$fileName")
-                    } catch (e: Exception) {
-                        log.error("${dlsiteId.value} 发生错误中断 ${e.message}")
-                    }
+                try {
+                    voiceService.loadEntityByDlsiteFile(dlsiteId.value, "$path/$fileName")
+                } catch (e: Exception) {
+                    log.error("${dlsiteId.value} 发生错误中断 ${e.message}")
                 }
             }
         }
