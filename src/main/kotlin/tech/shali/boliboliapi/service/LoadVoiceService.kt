@@ -34,6 +34,7 @@ class LoadVoiceService(
      */
     fun loadEntityByPath(path: String) {
         File(path).list()?.forEach { fileName ->
+            log.debug("$fileName start read")
             val dlsiteId = DLSITE_REX.find(fileName)
             dlsiteId?.let {
                 GlobalScope.launch {
