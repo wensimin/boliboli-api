@@ -10,6 +10,8 @@ interface VoiceDao : JpaRepository<Voice, String> {
 
     fun findByRjId(dlsiteId: String): Voice?
 
-    fun findByKeyTextLikeAndR18(keyword: String, R18: Boolean, pageable: Pageable): Page<List<SimpleVoice>>
+    fun findByKeyTextLikeAndR18False(keyword: String, pageable: Pageable): Page<List<SimpleVoice>>
+
+    fun findByKeyTextLike(keyword: String, pageable: Pageable): Page<List<SimpleVoice>>
 
 }

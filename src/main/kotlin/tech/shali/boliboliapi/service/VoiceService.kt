@@ -36,12 +36,10 @@ class VoiceService(
      * 关键字查询
      */
     fun findByKeyword(keywordQueryVo: KeywordQueryVo, token: JwtAuthenticationToken): Page<List<SimpleVoice>> {
-        if (keywordQueryVo.r18) token.checkAuth(Auth.R18)
-        return voiceDao.findByKeyTextLikeAndR18(
-            "%${keywordQueryVo.keyword}%",
-            keywordQueryVo.r18,
-            keywordQueryVo.page.toPageRequest()
-        )
+        if (keywordQueryVo.needR18) token.checkAuth(Auth.R18)
+        return if (keywordQueryVo.needR18)
+            voiceDao.findByKeyTextLike("%${keywordQueryVo.keyword}%", keywordQueryVo.page.toPageRequest())
+        else voiceDao.findByKeyTextLikeAndR18False("%${keywordQueryVo.keyword}%", keywordQueryVo.page.toPageRequest())
     }
 
     /**
