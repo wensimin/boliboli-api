@@ -95,7 +95,7 @@ class VoiceService(
     }
 
     private fun getMainImg(doc: Document): String {
-        val src = doc.select(".slider_items li img").attr("src")
+        val src = doc.select(".slider_items li img").attr("srcset")
         // 添加协议头
         return "https:$src"
     }
