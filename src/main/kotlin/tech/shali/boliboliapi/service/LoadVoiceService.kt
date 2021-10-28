@@ -13,6 +13,7 @@ class LoadVoiceService(
     private val resourceProperties: ResourceProperties,
     private val log: Logger
 ) {
+    private var reading: Boolean = false
 
     companion object {
         //文件夹命名约定 来自dlsite的voice
@@ -24,7 +25,17 @@ class LoadVoiceService(
      * 构建voice的entity
      */
     fun loadEntityByAllPath() {
-        resourceProperties.voicePaths.forEach(this::loadEntityByPath)
+        Thread {
+            if (reading) {
+                log.warn("已经有在扫描的工作")
+                return@Thread
+            }
+            reading = true
+            log.info("开始扫描全部音声")
+            resourceProperties.voicePaths.forEach(this::loadEntityByPath)
+            log.info("音声扫描结束")
+            reading = false
+        }.start()
     }
 
     /**
